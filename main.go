@@ -40,32 +40,28 @@ type application struct {
 
 func (a *application) Run(ctx context.Context, sentryClient libsentry.Client) error {
 
-	callbackUrl, err := url.Parse(a.GoogleRedirectURL)
-	if err != nil {
-		return errors.Wrapf(ctx, err, "parse callback url failed")
-	}
-
-	cookieGenerator := pkg.NewCookieGenerator([]byte(a.JWTSigningKey))
-	stateGenerator := pkg.NewStateGenerator([]byte(a.JWTSigningKey))
-	googleOAuth := pkg.NewGoogleOAuth(
-		a.GoogleClientID,
-		a.GoogleClientSecret,
-		a.GoogleRedirectURL,
-		a.GoogleHostedDomain,
-	)
-	loginService := pkg.NewLoginService(
-		cookieGenerator,
-		stateGenerator,
-		googleOAuth,
-		callbackUrl.Path,
-	)
-
 	router := mux.NewRouter()
 	router.Path("/healthz").Handler(libhttp.NewPrintHandler("OK"))
 	router.Path("/readiness").Handler(libhttp.NewPrintHandler("OK"))
 	router.Path("/metrics").Handler(promhttp.Handler())
 	router.Path("/setloglevel/{level}").Handler(log.NewSetLoglevelHandler(ctx, log.NewLogLevelSetter(2, 5*time.Minute)))
 
+	callbackUrl, err := url.Parse(a.GoogleRedirectURL)
+	if err != nil {
+		return errors.Wrapf(ctx, err, "parse callback url failed")
+	}
+
+	loginService := pkg.NewLoginService(
+		pkg.NewCookieGenerator([]byte(a.JWTSigningKey)),
+		pkg.NewStateGenerator([]byte(a.JWTSigningKey)),
+		pkg.NewGoogleOAuth(
+			a.GoogleClientID,
+			a.GoogleClientSecret,
+			a.GoogleRedirectURL,
+			a.GoogleHostedDomain,
+		),
+		callbackUrl.Path,
+	)
 	router.Use(loginService.Middleware)
 	router.Path(callbackUrl.Path).Handler(libhttp.NewErrorHandler(loginService))
 
