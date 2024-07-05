@@ -13,9 +13,13 @@ import (
 var _ = Describe("CookieGenerator", func() {
 	var signingKey = []byte("test-key")
 	var cookieGenerator = pkg.NewCookieGenerator(signingKey)
+	var ctx context.Context
+	BeforeEach(func() {
+		ctx = context.Background()
+	})
 	It("generates complete token", func() {
 		user := "jdoe@example.com"
-		cookie, err := cookieGenerator.Generate(context.TODO(), user)
+		cookie, err := cookieGenerator.Generate(ctx, user)
 		Expect(err).To(BeNil())
 		Expect(cookie.Subject).To(BeEquivalentTo(user))
 		Expect(cookie.Id).NotTo(BeEmpty())
@@ -26,10 +30,10 @@ var _ = Describe("CookieGenerator", func() {
 	})
 	It("generates valid token", func() {
 		user := "jdoe@example.com"
-		cookie, err := cookieGenerator.Generate(context.TODO(), user)
+		cookie, err := cookieGenerator.Generate(ctx, user)
 		Expect(err).To(BeNil())
 		Expect(cookie.String()).NotTo(BeEmpty())
-		cookie, err = cookieGenerator.Decode(context.TODO(), cookie.String())
+		cookie, err = cookieGenerator.Decode(ctx, cookie.String())
 		Expect(err).To(BeNil())
 		Expect(cookie.Subject).To(BeEquivalentTo(user))
 		Expect(cookie.Id).NotTo(BeEmpty())
@@ -39,7 +43,7 @@ var _ = Describe("CookieGenerator", func() {
 	})
 	It("returns error when decoding outdated token", func() {
 		user := "jdoe@example.com"
-		cookie, err := cookieGenerator.Generate(context.TODO(), user)
+		cookie, err := cookieGenerator.Generate(ctx, user)
 		Expect(err).To(BeNil())
 		Expect(cookie.String()).NotTo(BeEmpty())
 
@@ -47,17 +51,16 @@ var _ = Describe("CookieGenerator", func() {
 		cookie.NotBefore = time.Unix(cookie.NotBefore, 0).Add(time.Duration(-25) * time.Hour).Unix()
 		cookie.ExpiresAt = time.Unix(cookie.ExpiresAt, 0).Add(time.Duration(-25) * time.Hour).Unix()
 
-		token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, cookie).
-			SignedString(signingKey)
+		token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, cookie).SignedString(signingKey)
 		Expect(err).To(BeNil())
 		Expect(token).NotTo(BeEmpty())
 
-		cookie, err = cookieGenerator.Decode(context.TODO(), token)
+		cookie, err = cookieGenerator.Decode(ctx, token)
 		Expect(err).NotTo(BeNil())
 	})
 	It("returns error when decoding invalid string", func() {
 		raw := "0123456789"
-		cookie, err := cookieGenerator.Decode(context.TODO(), raw)
+		cookie, err := cookieGenerator.Decode(ctx, raw)
 		Expect(err).NotTo(BeNil())
 		Expect(cookie).To(BeEquivalentTo(pkg.Cookie{}))
 	})

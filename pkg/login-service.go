@@ -11,10 +11,8 @@ import (
 )
 
 const (
-	// CookieName used by the gateway and jwt middleware
-	CookieName = "X-Gateway-User"
-	// HeaderName used by the gateway and jwt middleware
-	HeaderName = "X-Gateway-User"
+	LoginCookieName = "X-Gateway-User"
+	LoginHeaderName = "X-Gateway-User"
 )
 
 type LoginService interface {
@@ -67,7 +65,7 @@ func (l *loginMiddleware) expectedAuthenicated(ctx context.Context, req *http.Re
 		return nil
 	}
 
-	cookie, err := req.Cookie(CookieName)
+	cookie, err := req.Cookie(LoginCookieName)
 	if err != nil || cookie.Value == "" {
 		return errors.Wrap(ctx, err, "invalid auth cookie")
 	}
@@ -76,11 +74,9 @@ func (l *loginMiddleware) expectedAuthenicated(ctx context.Context, req *http.Re
 	if err != nil {
 		return errors.Wrap(ctx, err, "invalid auth cookie")
 	}
+	req.Header.Set(LoginHeaderName, secureCookie.Subject)
 
-	if header := req.Header.Get(HeaderName); header != secureCookie.Subject {
-		return errors.Wrapf(ctx, err, "auth header mismatch with cookie %s != %s", header, secureCookie.Subject)
-	}
-	glog.V(2).Infof("is authenticated")
+	glog.V(2).Infof("user %s is authenticated", secureCookie.Subject)
 	return nil
 }
 

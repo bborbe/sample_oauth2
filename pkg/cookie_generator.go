@@ -25,7 +25,7 @@ func (s Cookie) String() string {
 // HTTPCookie based on Cookie
 func (s Cookie) HTTPCookie() *http.Cookie {
 	return &http.Cookie{
-		Name:  CookieName,
+		Name:  LoginCookieName,
 		Path:  "/",
 		Value: s.String(),
 	}

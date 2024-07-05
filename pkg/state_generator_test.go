@@ -13,9 +13,13 @@ import (
 var _ = Describe("StateGenerator", func() {
 	var signingKey = []byte("test-key")
 	var stateGenerator = pkg.NewStateGenerator(signingKey)
+	var ctx context.Context
+	BeforeEach(func() {
+		ctx = context.Background()
+	})
 	It("generates complete token", func() {
 		origin := "https://test.localhost/foo"
-		state, err := stateGenerator.Generate(context.TODO(), origin)
+		state, err := stateGenerator.Generate(ctx, origin)
 		Expect(err).To(BeNil())
 		Expect(state.Origin).To(BeEquivalentTo(origin))
 		Expect(state.Subject).NotTo(BeEmpty())
@@ -26,10 +30,10 @@ var _ = Describe("StateGenerator", func() {
 	})
 	It("generates valid token", func() {
 		origin := "https://test.localhost/foo"
-		state, err := stateGenerator.Generate(context.TODO(), origin)
+		state, err := stateGenerator.Generate(ctx, origin)
 		Expect(err).To(BeNil())
 		Expect(state.String()).NotTo(BeEmpty())
-		state, err = stateGenerator.Decode(context.TODO(), state.String())
+		state, err = stateGenerator.Decode(ctx, state.String())
 		Expect(err).To(BeNil())
 		Expect(state.Origin).To(BeEquivalentTo(origin))
 		Expect(state.Subject).NotTo(BeEmpty())
@@ -39,7 +43,7 @@ var _ = Describe("StateGenerator", func() {
 	})
 	It("returns error when decoding outdated token", func() {
 		origin := "https://test.localhost/foo"
-		state, err := stateGenerator.Generate(context.TODO(), origin)
+		state, err := stateGenerator.Generate(ctx, origin)
 		Expect(err).To(BeNil())
 		Expect(state.String()).NotTo(BeEmpty())
 
@@ -52,12 +56,12 @@ var _ = Describe("StateGenerator", func() {
 		Expect(err).To(BeNil())
 		Expect(token).NotTo(BeEmpty())
 
-		state, err = stateGenerator.Decode(context.TODO(), token)
+		state, err = stateGenerator.Decode(ctx, token)
 		Expect(err).NotTo(BeNil())
 	})
 	It("returns error when decoding invalid string", func() {
 		raw := "0123456789"
-		state, err := stateGenerator.Decode(context.TODO(), raw)
+		state, err := stateGenerator.Decode(ctx, raw)
 		Expect(err).NotTo(BeNil())
 		Expect(state).To(BeEquivalentTo(pkg.State{}))
 	})

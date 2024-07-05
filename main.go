@@ -66,7 +66,8 @@ func (a *application) Run(ctx context.Context, sentryClient libsentry.Client) er
 	router.Path(callbackUrl.Path).Handler(libhttp.NewErrorHandler(loginService))
 
 	router.Path("/").Handler(libhttp.NewErrorHandler(libhttp.WithErrorFunc(func(ctx context.Context, resp http.ResponseWriter, req *http.Request) error {
-		libhttp.WriteAndGlog(resp, "login success")
+		user := req.Header.Get(pkg.LoginHeaderName)
+		libhttp.WriteAndGlog(resp, "login %s success", user)
 		return nil
 	})))
 
