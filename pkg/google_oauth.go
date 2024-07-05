@@ -29,7 +29,7 @@ func (c Code) String() string {
 
 // GoogleOAuth defines the interface used for running a Google OAuth flow
 //
-//counterfeiter:generate -o mocks/login-google-oauth.go --fake-name GoogleOAuth . GoogleOAuth
+//counterfeiter:generate -o ../mocks/google-oauth.go --fake-name GoogleOAuth . GoogleOAuth
 type GoogleOAuth interface {
 	AuthCodeURL(state State) string
 	UserInfo(ctx context.Context, code Code) (*UserInfo, error)
