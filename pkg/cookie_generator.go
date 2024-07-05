@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Cookie storing the user pass-through information that is passed on to ERPNext for authentication.
+// Cookie storing the user pass-through information that is passed on authentication.
 type Cookie struct {
 	jwt.StandardClaims
 
