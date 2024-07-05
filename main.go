@@ -51,19 +51,16 @@ func (a *application) Run(ctx context.Context, sentryClient libsentry.Client) er
 		return errors.Wrapf(ctx, err, "parse callback url failed")
 	}
 
-	loginService := pkg.NewLoginService(
-		pkg.NewCookieGenerator([]byte(a.JWTSigningKey)),
-		pkg.NewStateGenerator([]byte(a.JWTSigningKey)),
-		pkg.NewGoogleOAuth(
-			a.GoogleClientID,
-			a.GoogleClientSecret,
-			a.GoogleRedirectURL,
-			a.GoogleHostedDomain,
-		),
-		callbackUrl.Path,
+	cookieGenerator := pkg.NewCookieGenerator([]byte(a.JWTSigningKey))
+	stateGenerator := pkg.NewStateGenerator([]byte(a.JWTSigningKey))
+	googleOAuth := pkg.NewGoogleOAuth(
+		a.GoogleClientID,
+		a.GoogleClientSecret,
+		a.GoogleRedirectURL,
+		a.GoogleHostedDomain,
 	)
-	router.Use(loginService.Middleware)
-	router.Path(callbackUrl.Path).Handler(libhttp.NewErrorHandler(loginService))
+	router.Use(pkg.NewLoginMiddleware(cookieGenerator, stateGenerator, googleOAuth, callbackUrl.Path).Middleware)
+	router.Path(callbackUrl.Path).Handler(libhttp.NewErrorHandler(pkg.NewLoginCallbackHandler(cookieGenerator, stateGenerator, googleOAuth)))
 
 	router.Path("/").Handler(libhttp.NewErrorHandler(libhttp.WithErrorFunc(func(ctx context.Context, resp http.ResponseWriter, req *http.Request) error {
 		user := req.Header.Get(pkg.LoginHeaderName)
