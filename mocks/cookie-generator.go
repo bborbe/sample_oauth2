@@ -174,10 +174,6 @@ func (fake *CookieGenerator) GenerateReturnsOnCall(i int, result1 pkg.Cookie, re
 func (fake *CookieGenerator) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.decodeMutex.RLock()
-	defer fake.decodeMutex.RUnlock()
-	fake.generateMutex.RLock()
-	defer fake.generateMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

@@ -1,0 +1,14 @@
+*.key
+*.pem
+*.pprof
+*.test
+.DS_Store
+/.claude
+/.idea
+/.update-logs/
+/CLAUDE.md
+coverage.html
+coverage.out
+main
+vendor
+/.mcp-*

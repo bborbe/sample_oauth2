@@ -14,12 +14,13 @@ import (
 	"github.com/bborbe/errors"
 	libhttp "github.com/bborbe/http"
 	"github.com/bborbe/log"
-	"github.com/bborbe/sample_oauth2/pkg"
 	libsentry "github.com/bborbe/sentry"
 	"github.com/bborbe/service"
 	"github.com/golang/glog"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"github.com/bborbe/sample_oauth2/pkg"
 )
 
 func main() {

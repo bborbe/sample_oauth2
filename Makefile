@@ -7,32 +7,32 @@ precommit: ensure format generate test check
 ensure:
 	go mod tidy
 	go mod verify
-	go mod vendor
+	rm -rf vendor
 
 format:
 	find . -type f -name '*.go' -not -path './vendor/*' -exec gofmt -w "{}" +
-	find . -type f -name '*.go' -not -path './vendor/*' -exec go run -mod=vendor github.com/incu6us/goimports-reviser -project-name github.com/bborbe/backup -file-path "{}" \;
+	find . -type f -name '*.go' -not -path './vendor/*' -exec go run -mod=mod github.com/incu6us/goimports-reviser -project-name github.com/bborbe/sample_oauth2 -file-path "{}" \;
 
 generate:
 	rm -rf mocks avro
-	go generate -mod=vendor ./...
+	go generate -mod=mod ./...
 
 test:
-	go test -mod=vendor -p=$${GO_TEST_PARALLEL:-1} -cover -race $(shell go list -mod=vendor ./... | grep -v /vendor/)
+	go test -mod=mod -p=$${GO_TEST_PARALLEL:-1} -cover -race $(shell go list -mod=mod ./... | grep -v /vendor/)
 
 check: lint vet errcheck vulncheck
 
 vet:
-	go vet -mod=vendor $(shell go list -mod=vendor ./... | grep -v /vendor/)
+	go vet -mod=mod $(shell go list -mod=mod ./... | grep -v /vendor/)
 
 lint:
-	go run -mod=vendor golang.org/x/lint/golint -min_confidence 1 $(shell go list -mod=vendor ./... | grep -v /vendor/)
+	go run -mod=mod golang.org/x/lint/golint -min_confidence 1 $(shell go list -mod=mod ./... | grep -v /vendor/)
 
 errcheck:
-	go run -mod=vendor github.com/kisielk/errcheck -ignore '(Close|Write|Fprint)' $(shell go list -mod=vendor ./... | grep -v /vendor/)
+	go run -mod=mod github.com/kisielk/errcheck -ignore '(Close|Write|Fprint)' $(shell go list -mod=mod ./... | grep -v /vendor/)
 
 vulncheck:
-	go run -mod=vendor golang.org/x/vuln/cmd/govulncheck $(shell go list -mod=vendor ./... | grep -v /vendor/)
+	go run -mod=mod golang.org/x/vuln/cmd/govulncheck $(shell go list -mod=mod ./... | grep -v /vendor/)
 
 deps:
 	go install github.com/bborbe/teamvault-utils/cmd/teamvault-config-parser@latest
@@ -43,7 +43,7 @@ deps:
 	go install github.com/onsi/ginkgo/v2/ginkgo@latest
 
 run:
-	@go mod vendor && go run -mod=vendor main.go \
+	@go run -mod=mod main.go \
 	-listen="localhost:8080" \
 	-sentry-dsn="$(shell teamvault-url --teamvault-config ~/.teamvault.json --teamvault-key=NqAM7q)" \
 	-google-client-id="$(shell teamvault-username --teamvault-config ~/.teamvault.json --teamvault-key=gOpDMO)" \

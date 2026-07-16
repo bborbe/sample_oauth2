@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -14,7 +14,7 @@ import (
 // ensuring CSRF protection and a fluent experience by passing the origin url.
 type State struct {
 	Origin string `json:"origin"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 
 	token string
 }
@@ -50,11 +50,11 @@ func (s *stateGenerator) Generate(ctx context.Context, originURL string) (State,
 
 	state := State{
 		Origin: originURL,
-		StandardClaims: jwt.StandardClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   generateUUID.String(),
-			IssuedAt:  issuedAt.Unix(),
-			NotBefore: issuedAt.Unix(),
-			ExpiresAt: issuedAt.Add(1 * time.Minute).Unix(),
+			IssuedAt:  jwt.NewNumericDate(issuedAt),
+			NotBefore: jwt.NewNumericDate(issuedAt),
+			ExpiresAt: jwt.NewNumericDate(issuedAt.Add(1 * time.Minute)),
 		},
 	}
 
@@ -92,10 +92,6 @@ func (s *stateGenerator) Decode(ctx context.Context, state string) (State, error
 func (s *stateGenerator) keyFunc(token *jwt.Token) (interface{}, error) {
 	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-	}
-
-	if err := token.Claims.Valid(); err != nil {
-		return nil, err
 	}
 
 	return s.key, nil

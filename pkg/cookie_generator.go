@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
 // Cookie storing the user pass-through information that is passed on authentication.
 type Cookie struct {
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 
 	token string
 }
@@ -57,12 +57,12 @@ func (s *cookieGenerator) Generate(ctx context.Context, user string) (Cookie, er
 	}
 
 	cookie := Cookie{
-		StandardClaims: jwt.StandardClaims{
-			Id:        generateUUID.String(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        generateUUID.String(),
 			Subject:   user,
-			IssuedAt:  issuedAt.Unix(),
-			NotBefore: issuedAt.Unix(),
-			ExpiresAt: issuedAt.Add(24 * time.Hour).Unix(),
+			IssuedAt:  jwt.NewNumericDate(issuedAt),
+			NotBefore: jwt.NewNumericDate(issuedAt),
+			ExpiresAt: jwt.NewNumericDate(issuedAt.Add(24 * time.Hour)),
 		},
 	}
 
@@ -100,10 +100,6 @@ func (s *cookieGenerator) Decode(ctx context.Context, cookie string) (Cookie, er
 func (s *cookieGenerator) keyFunc(token *jwt.Token) (interface{}, error) {
 	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-	}
-
-	if err := token.Claims.Valid(); err != nil {
-		return nil, err
 	}
 
 	return s.key, nil

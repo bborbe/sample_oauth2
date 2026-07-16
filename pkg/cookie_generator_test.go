@@ -4,10 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/bborbe/sample_oauth2/pkg"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
+	"github.com/bborbe/sample_oauth2/pkg"
 )
 
 var _ = Describe("CookieGenerator", func() {
@@ -22,11 +23,11 @@ var _ = Describe("CookieGenerator", func() {
 		cookie, err := cookieGenerator.Generate(ctx, user)
 		Expect(err).To(BeNil())
 		Expect(cookie.Subject).To(BeEquivalentTo(user))
-		Expect(cookie.Id).NotTo(BeEmpty())
+		Expect(cookie.ID).NotTo(BeEmpty())
 		Expect(cookie.String()).NotTo(BeEmpty())
-		Expect(time.Unix(cookie.IssuedAt, 0)).To(BeTemporally(">=", time.Unix(time.Now().Unix(), 0)))
-		Expect(time.Unix(cookie.NotBefore, 0)).To(BeTemporally(">=", time.Unix(time.Now().Unix(), 0)))
-		Expect(time.Unix(cookie.ExpiresAt, 0)).To(BeTemporally(">=", time.Unix(time.Now().AddDate(0, 0, 1).Unix(), 0)))
+		Expect(cookie.IssuedAt.Time).To(BeTemporally(">=", time.Unix(time.Now().Unix(), 0)))
+		Expect(cookie.NotBefore.Time).To(BeTemporally(">=", time.Unix(time.Now().Unix(), 0)))
+		Expect(cookie.ExpiresAt.Time).To(BeTemporally(">=", time.Unix(time.Now().AddDate(0, 0, 1).Unix(), 0)))
 	})
 	It("generates valid token", func() {
 		user := "jdoe@example.com"
@@ -36,10 +37,10 @@ var _ = Describe("CookieGenerator", func() {
 		cookie, err = cookieGenerator.Decode(ctx, cookie.String())
 		Expect(err).To(BeNil())
 		Expect(cookie.Subject).To(BeEquivalentTo(user))
-		Expect(cookie.Id).NotTo(BeEmpty())
-		Expect(time.Unix(cookie.IssuedAt, 0)).To(BeTemporally(">=", time.Unix(time.Now().Unix(), 0)))
-		Expect(time.Unix(cookie.NotBefore, 0)).To(BeTemporally(">=", time.Unix(time.Now().Unix(), 0)))
-		Expect(time.Unix(cookie.ExpiresAt, 0)).To(BeTemporally(">=", time.Unix(time.Now().AddDate(0, 0, 1).Unix(), 0)))
+		Expect(cookie.ID).NotTo(BeEmpty())
+		Expect(cookie.IssuedAt.Time).To(BeTemporally(">=", time.Unix(time.Now().Unix(), 0)))
+		Expect(cookie.NotBefore.Time).To(BeTemporally(">=", time.Unix(time.Now().Unix(), 0)))
+		Expect(cookie.ExpiresAt.Time).To(BeTemporally(">=", time.Unix(time.Now().AddDate(0, 0, 1).Unix(), 0)))
 	})
 	It("returns error when decoding outdated token", func() {
 		user := "jdoe@example.com"
@@ -47,9 +48,9 @@ var _ = Describe("CookieGenerator", func() {
 		Expect(err).To(BeNil())
 		Expect(cookie.String()).NotTo(BeEmpty())
 
-		cookie.IssuedAt = time.Unix(cookie.IssuedAt, 0).Add(time.Duration(-25) * time.Hour).Unix()
-		cookie.NotBefore = time.Unix(cookie.NotBefore, 0).Add(time.Duration(-25) * time.Hour).Unix()
-		cookie.ExpiresAt = time.Unix(cookie.ExpiresAt, 0).Add(time.Duration(-25) * time.Hour).Unix()
+		cookie.IssuedAt = jwt.NewNumericDate(cookie.IssuedAt.Add(time.Duration(-25) * time.Hour))
+		cookie.NotBefore = jwt.NewNumericDate(cookie.NotBefore.Add(time.Duration(-25) * time.Hour))
+		cookie.ExpiresAt = jwt.NewNumericDate(cookie.ExpiresAt.Add(time.Duration(-25) * time.Hour))
 
 		token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, cookie).SignedString(signingKey)
 		Expect(err).To(BeNil())

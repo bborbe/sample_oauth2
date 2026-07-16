@@ -167,10 +167,6 @@ func (fake *GoogleOAuth) UserInfoReturnsOnCall(i int, result1 *pkg.UserInfo, res
 func (fake *GoogleOAuth) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.authCodeURLMutex.RLock()
-	defer fake.authCodeURLMutex.RUnlock()
-	fake.userInfoMutex.RLock()
-	defer fake.userInfoMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
